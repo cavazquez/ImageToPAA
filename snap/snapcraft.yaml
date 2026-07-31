@@ -1,0 +1,47 @@
+name: imagetopaa
+base: core24
+version: "0.1.0"
+summary: Convert PNG/TGA images to Arma 3 PAA textures
+description: |
+  Open-source CLI that converts PNG/TGA images to Bohemia Interactive
+  `.paa` textures (DXT1/DXT5) for Arma 3 mods.
+
+  Alternative to the proprietary ImageToPAA.exe from Arma 3 Tools.
+  Supports soft alpha, mipmaps, and atomic writes.
+
+  Usage after install:
+    imagetopaa input.png output.paa
+    imagetopaa icon.png icon.paa --format dxt5
+    imagetopaa solid.png solid.paa --format auto --force
+
+  Project: https://github.com/cavazquez/ImageToPAA
+
+website: https://github.com/cavazquez/ImageToPAA
+source-code: https://github.com/cavazquez/ImageToPAA
+issues: https://github.com/cavazquez/ImageToPAA/issues
+contact: https://github.com/cavazquez/ImageToPAA/issues
+license: Apache-2.0
+
+# Switch to `stable` after the first store review passes.
+grade: devel
+confinement: strict
+
+platforms:
+  amd64:
+
+apps:
+  imagetopaa:
+    command: bin/image-to-paa
+    plugs:
+      - home
+      - removable-media
+
+parts:
+  image-to-paa:
+    plugin: rust
+    source: .
+    source-type: local
+    build-packages:
+      - pkg-config
+    # Pin to declared MSRV for reproducible builds.
+    rust-channel: "1.80"
