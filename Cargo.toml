@@ -1,0 +1,24 @@
+[package]
+name = "image-to-paa"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Open-source PNG/TGA → Bohemia Interactive PAA converter (ImageToPAA alternative)"
+license = "Apache-2.0"
+repository = "https://github.com/cavazquez/ImageToPAA"
+readme = "README.md"
+keywords = ["arma3", "paa", "texture", "dxt"]
+categories = ["command-line-utilities", "multimedia::images"]
+
+[[bin]]
+name = "image-to-paa"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+image = { version = "0.25", default-features = false, features = ["png", "tga"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
