@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: zip
+          # macOS: optional; enable when signed notarization is decided.
+          # - os: macos-latest
+          #   target: x86_64-apple-darwin
+          #   archive: tar.gz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Build release
+        run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Package (unix)
+        if: runner.os != 'Windows'
+        run: |
+          STAGE=image-to-paa-${{ github.ref_name }}-${{ matrix.target }}
+          mkdir -p "$STAGE"
+          cp target/${{ matrix.target }}/release/image-to-paa "$STAGE/"
+          cp LICENSE README.md "$STAGE/"
+          tar -czf "$STAGE.tar.gz" "$STAGE"
+          sha256sum "$STAGE.tar.gz" | tee "$STAGE.tar.gz.sha256"
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $stage = "image-to-paa-${{ github.ref_name }}-${{ matrix.target }}"
+          New-Item -ItemType Directory -Path $stage | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/image-to-paa.exe" $stage/
+          Copy-Item LICENSE,README.md $stage/
+          Compress-Archive -Path $stage -DestinationPath "$stage.zip"
+          Get-FileHash "$stage.zip" -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $stage.zip" } |
+            Tee-Object -FilePath "$stage.zip.sha256"
+      - name: Smoke test (unix)
+        if: runner.os != 'Windows'
+        run: |
+          python3 scripts/generate-fixtures.py
+          BIN=target/${{ matrix.target }}/release/image-to-paa
+          "$BIN" --version
+          "$BIN" fixtures/sources/opaque_blocks_16.png /tmp/smoke-dxt1.paa --force
+          "$BIN" fixtures/sources/soft_radial_16.png /tmp/smoke-dxt5.paa --force
+          test "$(xxd -p -l 2 /tmp/smoke-dxt1.paa)" = "01ff"
+          test "$(xxd -p -l 2 /tmp/smoke-dxt5.paa)" = "05ff"
+      - name: Smoke test (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python scripts/generate-fixtures.py
+          $bin = "target/${{ matrix.target }}/release/image-to-paa.exe"
+          & $bin --version
+          & $bin fixtures/sources/opaque_blocks_16.png smoke-dxt1.paa --force
+          & $bin fixtures/sources/soft_radial_16.png smoke-dxt5.paa --force
+          $h1 = (Format-Hex -Path smoke-dxt1.paa -Count 2).Bytes
+          $h5 = (Format-Hex -Path smoke-dxt5.paa -Count 2).Bytes
+          if ($h1[0] -ne 0x01 -or $h1[1] -ne 0xFF) { throw "DXT1 header mismatch" }
+          if ($h5[0] -ne 0x05 -or $h5[1] -ne 0xFF) { throw "DXT5 header mismatch" }
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.target }}
+          path: |
+            image-to-paa-*.tar.gz
+            image-to-paa-*.tar.gz.sha256
+            image-to-paa-*.zip
+            image-to-paa-*.zip.sha256
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: dist-*
+          merge-multiple: true
+      - name: Verify tag matches Cargo.toml
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VER=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          test "$TAG" = "$VER"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## image-to-paa ${{ github.ref_name }}
+
+            Open-source PNG/TGA → PAA (DXT1/DXT5) converter.
+
+            ### Verify
+            ```bash
+            sha256sum -c image-to-paa-*.sha256
+            ```
+
+            ### Notes
+            - macOS binaries are not published yet (unsigned).
+            - Does not include ImageToPAA.exe, TexView, or game assets.
+            - Profile: `docs/paa-profile.md`
+          files: dist/*
