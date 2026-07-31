@@ -1,0 +1,41 @@
+{
+  "generator": "scripts/regenerate-oracle.sh",
+  "imagetopaa_path": null,
+  "imagetopaa_version": null,
+  "note": "Fill by running regenerate-oracle.sh with IMAGETOPAA_PATH. Do not commit proprietary tools. PAA binaries stay local until redistribution is confirmed.",
+  "cases": [
+    {
+      "source": "fixtures/sources/opaque_blocks_16.png",
+      "source_sha256": null,
+      "paa_sha256": null,
+      "header_hex": null,
+      "expected_format": "dxt1",
+      "expected_type_bytes": "01ff",
+      "mips_mode": "mips",
+      "tags": ["CGVA", "CXAM", "SFFO"],
+      "provenance": "synthetic"
+    },
+    {
+      "source": "fixtures/sources/soft_radial_16.png",
+      "source_sha256": null,
+      "paa_sha256": null,
+      "header_hex": null,
+      "expected_format": "dxt5",
+      "expected_type_bytes": "05ff",
+      "mips_mode": "mips",
+      "tags": ["CGVA", "CXAM", "GALF", "SFFO"],
+      "provenance": "synthetic"
+    },
+    {
+      "source": "fixtures/sources/soft_diagonal_8x16.png",
+      "source_sha256": null,
+      "paa_sha256": null,
+      "header_hex": null,
+      "expected_format": "dxt5",
+      "expected_type_bytes": "05ff",
+      "mips_mode": "no-mips",
+      "tags": ["CGVA", "CXAM", "GALF", "SFFO"],
+      "provenance": "synthetic"
+    }
+  ]
+}

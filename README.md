@@ -10,41 +10,68 @@ ni de Tools de Windows.
 
 ## Estado
 
-Scaffold inicial:
+Encoder DXT1/DXT5 funcional según el contrato en
+[`docs/paa-profile.md`](docs/paa-profile.md):
 
-- CLI `image-to-paa`
-- Lectura PNG/TGA (RGBA)
-- Validación power-of-two
-- Escritura **stub** (aún no es un PAA que TexView/Arma acepte)
+- CLI `image-to-paa` + biblioteca `image_to_paa`
+- PNG/TGA → RGBA8, dimensiones POT (sin resize implícito)
+- Contenedor PAA (`01 FF` / `05 FF`) con tags `CGVA` / `CXAM` / `GALF` / `SFFO`
+- Mipmaps alpha-correct / sRGB hasta eje menor 4
+- Escritura atómica y `--force`
 
-Siguiente: compresión DXT1/DXT5 real + contenedor PAA compatible (ver
-[`docs/paa-format.md`](docs/paa-format.md)).
-
-## Uso (cuando el encoder esté listo)
+## Uso
 
 ```bash
-cargo run --release -- artwork/radio.png dist/radio.paa
-cargo run --release -- --dxt5 icon.png icon.paa
+cargo build --release
+./target/release/image-to-paa artwork/radio.png dist/radio.paa
+./target/release/image-to-paa icon.png icon.paa --format dxt5
+./target/release/image-to-paa solid.png solid.paa --format auto --force
 ```
-
-Flags:
 
 | Flag | Efecto |
 |------|--------|
-| `--dxt5` | Fuerza DXT5 (alfa explícita) |
-| `--dxt1` | Fuerza DXT1 |
-| `--no-mips` | Sin cadena de mipmaps |
+| `--format auto\|dxt1\|dxt5` | Formato canónico (`auto`: opaco→DXT1, alfa→DXT5) |
+| `--dxt5` / `--dxt1` | Aliases; conflictivos entre sí y con `--format` (exit 2) |
+| `--no-mips` | Sólo el nivel base |
+| `--force` | Sobrescribe una salida existente |
+
+La salida debe terminar en `.paa`. Sin `--force`, un archivo existente no se
+toca.
+
+## RMTFAR (8 texturas)
+
+```bash
+./scripts/convert-rmtfar.sh /ruta/a/rmtfar /tmp/radio-paa
+```
+
+No modifica `addon/ui/radios`. Ver hashes en `SHA256SUMS` del directorio de
+salida antes de promover.
+
+## Interop oficial (opt-in)
+
+```bash
+export IMAGETOPAA_PATH=/path/to/ImageToPAA.exe
+cargo build --release
+./scripts/interop-imagetopaa.sh
+```
+
+No se descarga ni se exige en CI pública.
+
+## Instalación desde release
+
+1. Descargá el archivo de [Releases](https://github.com/cavazquez/ImageToPAA/releases) para tu OS.
+2. Verificá checksum: `sha256sum -c image-to-paa-*.sha256`
+3. Extraé y colocá `image-to-paa` en el `PATH`.
+
+macOS aún no se publica (binarios sin firmar).
 
 ## Desarrollo
 
 ```bash
-cargo test
-cargo fmt
+python3 scripts/generate-fixtures.py
+cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
+cargo test --all-targets --locked
 ```
 
-## Relación con RMTFAR
-
-Convive en `ProyectoRmtfar/ImageToPAA` junto a `rmtfar/`. Los scripts
-`convert-radio-textures.*` de RMTFAR podrán apuntar a este binario en lugar de
-`ImageToPAA.exe` cuando el encoder sea compatible.
+MSRV: Rust **1.80**.
