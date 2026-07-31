@@ -44,6 +44,10 @@ struct Args {
     #[arg(long)]
     no_mips: bool,
 
+    /// Per-mip LZO1X when it shrinks the BCn payload (Arma-compatible).
+    #[arg(long)]
+    compress: bool,
+
     /// Overwrite an existing output file.
     #[arg(long)]
     force: bool,
@@ -200,6 +204,7 @@ fn run() -> Result<()> {
     let options = EncodeOptions {
         format,
         generate_mips: !args.no_mips,
+        compress: args.compress,
     };
 
     let bytes =
@@ -220,9 +225,10 @@ fn run() -> Result<()> {
     };
 
     eprintln!(
-        "Wrote {} ({resolved}, {width}x{height}, mips={})",
+        "Wrote {} ({resolved}, {width}x{height}, mips={}, compress={})",
         output.display(),
-        !args.no_mips
+        !args.no_mips,
+        args.compress
     );
     Ok(())
 }

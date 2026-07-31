@@ -46,15 +46,9 @@ fn gruppe_adler_r110_icon_structure() {
         bytes[p.sffo[0] as usize + 1] & 0x80 != 0,
         "mip0 should set LZO bit on width"
     );
-    assert!(
-        bytes[p.sffo[1] as usize + 1] & 0x80 != 0,
-        "mip1 should set LZO bit on width"
-    );
-    assert_eq!(
-        bytes[p.sffo[2] as usize + 1] & 0x80,
-        0,
-        "mip2 should be raw BC3"
-    );
+    assert!(p.mips[0].lzo);
+    assert!(p.mips[1].lzo);
+    assert!(!p.mips[2].lzo);
 
     // Compressed mip0 must be smaller than raw BC3 size.
     let raw_bc3 = (512u32 / 4) * (512 / 4) * 16;

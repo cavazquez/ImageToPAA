@@ -6,11 +6,13 @@ mod codec;
 mod container;
 mod encode;
 mod error;
+mod lzo;
 mod metadata;
 mod mipmaps;
 mod options;
 
-pub use container::{parse_paa, ParsedPaa};
+pub use container::{parse_paa, MipPayload, ParsedPaa};
 pub use encode::{encode_rgba8, encode_rgba8_to};
 pub use error::EncodeError;
+pub use lzo::decompress_exact;
 pub use options::{EncodeOptions, PaFormat};

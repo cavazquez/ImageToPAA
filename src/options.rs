@@ -17,6 +17,8 @@ pub struct EncodeOptions {
     pub format: PaFormat,
     /// When `false`, only the base mip is written.
     pub generate_mips: bool,
+    /// When `true`, try per-mip LZO1X; keep raw BCn if LZO does not shrink.
+    pub compress: bool,
 }
 
 impl Default for EncodeOptions {
@@ -24,6 +26,7 @@ impl Default for EncodeOptions {
         Self {
             format: PaFormat::Auto,
             generate_mips: true,
+            compress: false,
         }
     }
 }

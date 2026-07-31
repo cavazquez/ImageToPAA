@@ -47,6 +47,7 @@ fn fixture_no_mips_rectangular() {
         EncodeOptions {
             format: PaFormat::Auto,
             generate_mips: false,
+            compress: false,
         },
     )
     .unwrap();

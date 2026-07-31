@@ -7,9 +7,12 @@ use std::io::Write;
 
 #[derive(Debug, Clone)]
 pub struct MipPayload {
+    /// Logical width (`width & 0x7FFF` when reading).
     pub width: u16,
     pub height: u16,
     pub data: Vec<u8>,
+    /// When true, `data` is LZO1X and the on-disk width has bit `0x8000` set.
+    pub lzo: bool,
 }
 
 /// Serialize a complete PAA file from prepared tags + mip payloads.
@@ -36,6 +39,11 @@ pub fn write_paa<W: Write>(
             return Err(EncodeError::PayloadTooLarge {
                 len: mip.data.len(),
             });
+        }
+        if mip.lzo && mip.width > 0x7FFF {
+            return Err(EncodeError::Write(
+                "LZO flag requires logical width <= 0x7FFF".into(),
+            ));
         }
     }
 
@@ -79,7 +87,12 @@ pub fn write_paa<W: Write>(
         .map_err(|e| EncodeError::Write(e.to_string()))?;
 
     for mip in mips {
-        w.write_all(&mip.width.to_le_bytes())
+        let stored_w = if mip.lzo {
+            mip.width | 0x8000
+        } else {
+            mip.width
+        };
+        w.write_all(&stored_w.to_le_bytes())
             .map_err(|e| EncodeError::Write(e.to_string()))?;
         w.write_all(&mip.height.to_le_bytes())
             .map_err(|e| EncodeError::Write(e.to_string()))?;
@@ -164,7 +177,9 @@ pub fn parse_paa(data: &[u8]) -> Result<ParsedPaa, String> {
         if i + 7 > data.len() {
             return Err("mip header OOB".into());
         }
-        let width = u16::from_le_bytes(data[i..i + 2].try_into().unwrap()) & 0x7FFF;
+        let raw_w = u16::from_le_bytes(data[i..i + 2].try_into().unwrap());
+        let lzo = raw_w & 0x8000 != 0;
+        let width = raw_w & 0x7FFF;
         let height = u16::from_le_bytes(data[i + 2..i + 4].try_into().unwrap());
         let mut len_b = [0u8; 4];
         len_b[..3].copy_from_slice(&data[i + 4..i + 7]);
@@ -177,6 +192,7 @@ pub fn parse_paa(data: &[u8]) -> Result<ParsedPaa, String> {
             width,
             height,
             data: data[i..i + len].to_vec(),
+            lzo,
         });
         i += len;
     }
@@ -200,6 +216,7 @@ mod tests {
                 width: (16 >> i.min(2)) as u16,
                 height: (16 >> i.min(2)) as u16,
                 data: vec![0xAB; 8],
+                lzo: false,
             })
             .collect()
     }
@@ -262,6 +279,7 @@ mod tests {
             width: 4,
             height: 4,
             data: vec![0; 0x0100_0000],
+            lzo: false,
         }];
         let err = write_paa(Vec::new(), PaFormat::Dxt5, &tags, &mips).unwrap_err();
         assert!(matches!(err, EncodeError::PayloadTooLarge { .. }));
@@ -278,6 +296,7 @@ mod tests {
             width: 4,
             height: 4,
             data: vec![0x11; 16],
+            lzo: false,
         }];
         let mut buf = Vec::new();
         write_paa(&mut buf, PaFormat::Dxt5, &tags, &mips).unwrap();
@@ -287,5 +306,39 @@ mod tests {
         let p = parse_paa(&buf).unwrap();
         let names: Vec<_> = p.tags.iter().map(|(n, _)| n.as_str()).collect();
         assert_eq!(names, ["CGVA", "CXAM", "GALF", "SFFO"]);
+    }
+
+    #[test]
+    fn mixed_lzo_and_raw_mips() {
+        let tags = [
+            Tag::new(b"CGVA", vec![0; 4]),
+            Tag::new(b"CXAM", vec![255; 4]),
+        ];
+        let mips = vec![
+            MipPayload {
+                width: 16,
+                height: 16,
+                data: vec![0xAA; 40],
+                lzo: true,
+            },
+            MipPayload {
+                width: 8,
+                height: 8,
+                data: vec![0xBB; 8],
+                lzo: false,
+            },
+        ];
+        let mut buf = Vec::new();
+        write_paa(&mut buf, PaFormat::Dxt1, &tags, &mips).unwrap();
+        let p = parse_paa(&buf).unwrap();
+        assert!(p.mips[0].lzo);
+        assert!(!p.mips[1].lzo);
+        assert_eq!(p.mips[0].width, 16);
+        let off0 = p.sffo[0] as usize;
+        let stored = u16::from_le_bytes(buf[off0..off0 + 2].try_into().unwrap());
+        assert_eq!(stored, 16 | 0x8000);
+        let off1 = p.sffo[1] as usize;
+        let stored1 = u16::from_le_bytes(buf[off1..off1 + 2].try_into().unwrap());
+        assert_eq!(stored1, 8);
     }
 }

@@ -2,7 +2,7 @@
 name = "image-to-paa"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.81"
 description = "Open-source PNG/TGA → Bohemia Interactive PAA converter (ImageToPAA alternative)"
 license = "Apache-2.0"
 repository = "https://github.com/cavazquez/ImageToPAA"
@@ -22,6 +22,7 @@ path = "src/main.rs"
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 image = { version = "0.25", default-features = false, features = ["png", "tga"] }
+lzokay = "2.0.1"
 thiserror = "2"
 texpresso = "2.0.2"
 
