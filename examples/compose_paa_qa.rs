@@ -6,7 +6,7 @@
 //! ```
 
 use image::{Rgba, RgbaImage};
-use image_to_paa::{parse_paa, PaFormat};
+use image_to_paa::{PaFormat, parse_paa};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};

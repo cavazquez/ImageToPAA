@@ -44,4 +44,4 @@ parts:
     build-packages:
       - pkg-config
     # Pin to declared MSRV for reproducible builds.
-    rust-channel: "1.81"
+    rust-channel: "1.85"

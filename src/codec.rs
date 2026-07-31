@@ -8,7 +8,7 @@
 //! Features used: default `texpresso` (no rayon required for determinism).
 
 use crate::error::EncodeError;
-use texpresso::{Algorithm, Format, Params, COLOUR_WEIGHTS_PERCEPTUAL};
+use texpresso::{Algorithm, COLOUR_WEIGHTS_PERCEPTUAL, Format, Params};
 
 fn params(weigh_colour_by_alpha: bool) -> Params {
     Params {

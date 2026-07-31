@@ -1,8 +1,8 @@
 [package]
 name = "image-to-paa"
 version = "0.1.0"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 description = "Open-source PNG/TGA → Bohemia Interactive PAA converter (ImageToPAA alternative)"
 license = "Apache-2.0"
 repository = "https://github.com/cavazquez/ImageToPAA"

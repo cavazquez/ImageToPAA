@@ -1,6 +1,6 @@
 //! Structural checks against the Gruppe Adler online-converter oracle.
 
-use image_to_paa::{parse_paa, PaFormat};
+use image_to_paa::{PaFormat, parse_paa};
 use std::fs;
 use std::path::PathBuf;
 

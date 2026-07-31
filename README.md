@@ -100,4 +100,4 @@ cargo clippy --all-targets -- -D warnings
 cargo test --all-targets --locked
 ```
 
-MSRV: Rust **1.81** (requerido por `lzokay` 2.x; documentado en el cambio #13).
+MSRV: Rust **1.85** (Edition 2024).

@@ -1,8 +1,8 @@
 //! CLI for image-to-paa.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Parser, ValueEnum};
-use image_to_paa::{encode_rgba8, EncodeError, EncodeOptions, PaFormat};
+use image_to_paa::{EncodeError, EncodeOptions, PaFormat, encode_rgba8};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
