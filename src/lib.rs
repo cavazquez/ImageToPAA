@@ -11,7 +11,7 @@ mod metadata;
 mod mipmaps;
 mod options;
 
-pub use container::{parse_paa, MipPayload, ParsedPaa};
+pub use container::{MipPayload, ParsedPaa, parse_paa};
 pub use encode::{encode_rgba8, encode_rgba8_to};
 pub use error::EncodeError;
 pub use lzo::decompress_exact;

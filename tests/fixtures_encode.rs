@@ -1,7 +1,7 @@
 //! Integration tests for the encode pipeline and fixtures.
 
 use image::RgbaImage;
-use image_to_paa::{encode_rgba8, parse_paa, EncodeOptions, PaFormat};
+use image_to_paa::{EncodeOptions, PaFormat, encode_rgba8, parse_paa};
 use std::path::PathBuf;
 
 fn fixtures_dir() -> PathBuf {
@@ -33,10 +33,11 @@ fn fixture_soft_dxt5() {
     assert_eq!(&bytes[0..2], [0x05, 0xFF]);
     let p = parse_paa(&bytes).unwrap();
     assert_eq!(p.format, PaFormat::Dxt5);
-    assert!(p
-        .tags
-        .iter()
-        .any(|(n, v)| n == "GALF" && v.as_slice() == [1, 0, 0, 0]));
+    assert!(
+        p.tags
+            .iter()
+            .any(|(n, v)| n == "GALF" && v.as_slice() == [1, 0, 0, 0])
+    );
 }
 
 #[test]

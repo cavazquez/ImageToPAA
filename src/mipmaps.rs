@@ -163,7 +163,7 @@ mod tests {
         }
         let chain = generate_mip_chain(&img, true);
         let mip = &chain[1]; // 4x4
-                             // Compose over white: transparent pixels must stay white.
+        // Compose over white: transparent pixels must stay white.
         for px in mip.pixels() {
             let a = px.0[3] as f32 / 255.0;
             let r = px.0[0] as f32 * a + 255.0 * (1.0 - a);

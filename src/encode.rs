@@ -1,7 +1,7 @@
 //! Full encode pipeline: mips → BCn → optional LZO → tags → container.
 
 use crate::codec::{encode_bc1, encode_bc3};
-use crate::container::{write_paa, MipPayload};
+use crate::container::{MipPayload, write_paa};
 use crate::error::EncodeError;
 use crate::lzo::maybe_compress;
 use crate::metadata::{build_semantic_tags, colour_stats};
@@ -100,7 +100,7 @@ fn validate_dimensions(width: u32, height: u32) -> Result<(), EncodeError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::codec::{decompress, BcFormat};
+    use crate::codec::{BcFormat, decompress};
     use crate::container::parse_paa;
     use crate::lzo::decompress_exact;
     use image::Rgba;
@@ -159,10 +159,11 @@ mod tests {
         let p = parse_paa(&bytes).unwrap();
         assert_eq!(p.format, PaFormat::Dxt5);
         assert_eq!(p.mips.len(), 1);
-        assert!(p
-            .tags
-            .iter()
-            .any(|(n, v)| n == "GALF" && v == &[1, 0, 0, 0]));
+        assert!(
+            p.tags
+                .iter()
+                .any(|(n, v)| n == "GALF" && v == &[1, 0, 0, 0])
+        );
         let dec = decompress(BcFormat::Bc3, &p.mips[0].data, 8, 8);
         let mid = dec
             .chunks(4)
