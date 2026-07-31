@@ -31,7 +31,8 @@ jobs:
       - name: test
         run: cargo test --all-targets --locked
       - name: lockfile
-        run: cargo metadata --locked --format-version 1 > /dev/null
+        # Avoid `> /dev/null` — PowerShell on windows-latest resolves that path literally.
+        run: cargo metadata --locked --format-version 1
 
   msrv:
     name: MSRV 1.85
