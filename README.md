@@ -57,7 +57,25 @@ cargo build --release
 
 No se descarga ni se exige en CI pública.
 
-## Instalación desde release
+## Instalación
+
+### Snap (Linux)
+
+Cuando el nombre `imagetopaa` esté registrado en el Snap Store:
+
+```bash
+sudo snap install imagetopaa --edge   # o --stable tras la primera release
+imagetopaa input.png output.paa
+```
+
+Build local:
+
+```bash
+snapcraft
+sudo snap install --dangerous imagetopaa_*.snap
+```
+
+### Release GitHub
 
 1. Descargá el archivo de [Releases](https://github.com/cavazquez/ImageToPAA/releases) para tu OS.
 2. Verificá checksum: `sha256sum -c image-to-paa-*.sha256`
