@@ -9,22 +9,27 @@ Synthetic PNG sources under `sources/` are original to this project. They contai
 python3 scripts/generate-fixtures.py
 ```
 
-## Official oracle (opt-in)
+## Oracles
+
+### Official ImageToPAA.exe (opt-in)
 
 ```bash
 export IMAGETOPAA_PATH=/path/to/ImageToPAA.exe
 ./scripts/regenerate-oracle.sh
 ```
 
-## Redistribution policy for oracle outputs
+Until redistribution of those derived `.paa` binaries is confirmed, prefer
+hashes in `oracle/manifest.template.json` over committing BI-tool outputs.
 
-ImageToPAA.exe is proprietary. Until we confirm that **derived `.paa` binaries**
-produced by it may be redistributed under this project's license, this repo
-commits only:
+### Gruppe Adler web converter (checked in)
 
-- synthetic PNG sources;
-- `oracle/manifest.template.json` (schema) and any filled `manifest.json` that
-  stores **hashes / interpreted headers / tool options**, not the `.paa` bytes;
-- optional PNG decodes from TexView when those are clearly our synthetic content.
+`oracle/gruppe_adler/` holds one PAA derived from **original RMTFAR** art via
+https://paa.gruppe-adler.de/ — used to lock container/tag/mip/LZO expectations
+(see README there). Useful for issue #12 / future #13; not a BCn golden file.
 
-Do **not** commit `ImageToPAA.exe`, TexView, or Arma game assets.
+## Redistribution policy
+
+- Do **not** commit `ImageToPAA.exe`, TexView, or Arma/TFAR/ACRE game assets.
+- Community-converter outputs of **our own** masters may be versioned as
+  interoperability samples with clear provenance.
+- Bohemia-tool outputs: hashes/metadata first; binaries only when policy allows.

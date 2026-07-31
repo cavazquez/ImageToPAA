@@ -1,0 +1,28 @@
+{
+  "tool": "gruppe-adler-paa-web",
+  "tool_url": "https://paa.gruppe-adler.de/",
+  "captured_at": "2026-07-31",
+  "cases": [
+    {
+      "file": "fixtures/oracle/gruppe_adler/r110_independent_icon.paa",
+      "source_external": "rmtfar/artwork/radios/r110_independent_icon_paa_source.png",
+      "paa_sha256": "45566b655c6fe2389955764051726308a4bd0085229f7afa89178d757262399b",
+      "expected_type_bytes": "05ff",
+      "expected_format": "dxt5",
+      "tags": ["CGVA", "CXAM", "GALF", "SFFO"],
+      "mip_dims": [
+        [512, 512],
+        [256, 256],
+        [128, 128],
+        [64, 64],
+        [32, 32],
+        [16, 16],
+        [8, 8],
+        [4, 4]
+      ],
+      "lzo_on_mips": [true, true, false, false, false, false, false, false],
+      "galf_hex": "01ffffff",
+      "notes": "Oracle for container + optional LZO (#13). Not a golden BCn payload."
+    }
+  ]
+}
