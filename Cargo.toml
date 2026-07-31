@@ -30,6 +30,10 @@ assert_cmd = "2"
 predicates = "3"
 tempfile = "3"
 
+[[example]]
+name = "compose_paa_qa"
+required-features = []
+
 [profile.release]
 lto = true
 codegen-units = 1
