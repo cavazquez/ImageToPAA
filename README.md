@@ -86,6 +86,13 @@ macOS aún no se publica (binarios sin firmar).
 ## Desarrollo
 
 ```bash
+./check.sh          # fmt + clippy + tests + lockfile (igual que CI)
+./check.sh --fix    # auto-format y luego el gate
+```
+
+Equivalente manual:
+
+```bash
 python3 scripts/generate-fixtures.py
 cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
