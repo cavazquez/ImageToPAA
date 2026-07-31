@@ -9,7 +9,7 @@ use image::{Rgba, RgbaImage};
 use image_to_paa::{parse_paa, PaFormat};
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use texpresso::Format;
 
@@ -55,7 +55,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn qa_one(path: &PathBuf, out_dir: &PathBuf) -> Result<String, String> {
+fn qa_one(path: &Path, out_dir: &Path) -> Result<String, String> {
     let bytes = fs::read(path).map_err(|e| e.to_string())?;
     let parsed = parse_paa(&bytes)?;
     if parsed.format != PaFormat::Dxt5 {
@@ -67,10 +67,7 @@ fn qa_one(path: &PathBuf, out_dir: &PathBuf) -> Result<String, String> {
     let mut rgba = vec![0u8; (w * h * 4) as usize];
     Format::Bc3.decompress(&mip.data, w as usize, h as usize, &mut rgba);
 
-    let stem = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("out");
+    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("out");
 
     let img = RgbaImage::from_raw(w, h, rgba.clone()).ok_or("rgba")?;
     img.save(out_dir.join(format!("{stem}_decoded.png")))
@@ -159,7 +156,15 @@ fn edge_stats(rgba: &[u8], w: u32, h: u32) -> (f64, f64, usize, usize, usize) {
             }
         }
     }
-    let halo_w = if n_edge > 0 { sum_w / n_edge as f64 } else { 0.0 };
-    let halo_b = if n_edge > 0 { sum_b / n_edge as f64 } else { 0.0 };
+    let halo_w = if n_edge > 0 {
+        sum_w / n_edge as f64
+    } else {
+        0.0
+    };
+    let halo_b = if n_edge > 0 {
+        sum_b / n_edge as f64
+    } else {
+        0.0
+    };
     (halo_w, halo_b, soft, opaque, clear)
 }
