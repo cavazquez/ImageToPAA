@@ -34,11 +34,11 @@ jobs:
         run: cargo metadata --locked --format-version 1 > /dev/null
 
   msrv:
-    name: MSRV 1.80
+    name: MSRV 1.81
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.80.0
+      - uses: dtolnay/rust-toolchain@1.81.0
       - uses: Swatinem/rust-cache@v2
       - run: python3 scripts/generate-fixtures.py
       - run: cargo test --all-targets --locked

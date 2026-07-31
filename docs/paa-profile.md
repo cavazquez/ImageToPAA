@@ -40,13 +40,12 @@ provisional** y se confirmará con el oráculo de `#2` / suite `#12`.
 - Tags `CGVA`, `CXAM`, `GALF` (condicional), `SFFO`.
 - Paleta vacía.
 - Cadena de mipmaps DXT hasta eje menor 4.
-- Payloads BC1 (8 B/bloque) y BC3 (16 B/bloque) sin LZO.
+- Payloads BC1 (8 B/bloque) y BC3 (16 B/bloque); LZO1X opcional por mip (`--compress`).
 - CLI: PNG/TGA → `.paa`, formatos `auto|dxt1|dxt5`, `--no-mips`, `--force`.
 
 **Fuera del MVP (extensiones futuras)**
 
 - DXT2/3/4, ARGB8888/1555/4444, AI88/GRAYA.
-- LZO por mip (`#13`).
 - Normal maps / tag `ZIWS` / swizzle `_nohq`.
 - Reglas completas de `TexConvert.cfg` / hints por sufijo.
 - Tags `PROC` u otros no listados.
@@ -76,7 +75,7 @@ palette:
   u16 LE = 0                  ; bytes 00 00  (DXT: sin colores de paleta)
 
 mips (1..16):
-  u16 LE width                ; bit 15 = LZO (MVP: siempre 0)
+  u16 LE width                ; bit 15 = LZO (0 = raw BCn; 1 = LZO1X del payload)
   u16 LE height
   u24 LE data_len             ; 3 bytes little-endian, max 0xFFFFFF
   payload[data_len]           ; bloques BC1 o BC3
@@ -119,7 +118,7 @@ SFFO[mip_count..15] = 0
 | Máximo de mips | 16 |
 | Payload por mip | ≤ `0xFFFFFF` bytes |
 | Redimensionado | **Prohibido**. La CLI/lib rechazan no-POT; no pad/resize implícito |
-| LZO | No escrito (bit 15 de width = 0). Lectura documentada para futuro `#13` |
+| LZO | Opcional (`EncodeOptions::compress` / `--compress`). Por mip: comprimir con LZO1X (`lzokay`); guardar LZO **sólo** si `len(comp) < len(raw)`; bit 15 del width. Mezcla raw+LZO permitida. |
 
 ## Política de formato y alfa
 
@@ -173,6 +172,6 @@ activado en el backend para no contaminar bordes con RGB bajo A=0.
 
 ## Extensiones futuras vs MVP
 
-Cualquier PR que añada LZO, swizzle, formatos no-DXT o tags extra debe
+Cualquier PR que añada swizzle, formatos no-DXT o tags extra debe
 actualizar este perfil en la misma PR y marcar la sección correspondiente.
 Hasta entonces, esos caminos no existen en la API pública.

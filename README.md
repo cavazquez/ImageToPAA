@@ -33,6 +33,7 @@ cargo build --release
 | `--format auto\|dxt1\|dxt5` | Formato canónico (`auto`: opaco→DXT1, alfa→DXT5) |
 | `--dxt5` / `--dxt1` | Aliases; conflictivos entre sí y con `--format` (exit 2) |
 | `--no-mips` | Sólo el nivel base |
+| `--compress` | LZO1X por mip si reduce tamaño (compatible Arma) |
 | `--force` | Sobrescribe una salida existente |
 
 La salida debe terminar en `.paa`. Sin `--force`, un archivo existente no se
@@ -99,4 +100,4 @@ cargo clippy --all-targets -- -D warnings
 cargo test --all-targets --locked
 ```
 
-MSRV: Rust **1.80**.
+MSRV: Rust **1.81** (requerido por `lzokay` 2.x; documentado en el cambio #13).

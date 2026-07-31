@@ -1,8 +1,9 @@
-//! Full encode pipeline: mips → BCn → tags → container.
+//! Full encode pipeline: mips → BCn → optional LZO → tags → container.
 
 use crate::codec::{encode_bc1, encode_bc3};
 use crate::container::{write_paa, MipPayload};
 use crate::error::EncodeError;
+use crate::lzo::maybe_compress;
 use crate::metadata::{build_semantic_tags, colour_stats};
 use crate::mipmaps::generate_mip_chain;
 use crate::options::{EncodeOptions, PaFormat};
@@ -37,15 +38,21 @@ pub fn encode_rgba8_to<W: Write>(
     for level in &chain {
         let (w, h) = level.dimensions();
         let raw = level.as_raw();
-        let data = match format {
+        let bcn = match format {
             PaFormat::Dxt1 => encode_bc1(raw, w, h)?,
             PaFormat::Dxt5 => encode_bc3(raw, w, h)?,
             PaFormat::Auto => unreachable!(),
+        };
+        let (data, lzo) = if options.compress {
+            maybe_compress(bcn)?
+        } else {
+            (bcn, false)
         };
         mips.push(MipPayload {
             width: w as u16,
             height: h as u16,
             data,
+            lzo,
         });
     }
 
@@ -95,7 +102,17 @@ mod tests {
     use super::*;
     use crate::codec::{decompress, BcFormat};
     use crate::container::parse_paa;
+    use crate::lzo::decompress_exact;
     use image::Rgba;
+
+    fn bcn_raw_size(format: PaFormat, w: u16, h: u16) -> usize {
+        let blocks = (w as usize).div_ceil(4) * (h as usize).div_ceil(4);
+        match format {
+            PaFormat::Dxt1 => blocks * 8,
+            PaFormat::Dxt5 => blocks * 16,
+            PaFormat::Auto => unreachable!(),
+        }
+    }
 
     #[test]
     fn rejects_non_pot() {
@@ -122,6 +139,7 @@ mod tests {
         let p = parse_paa(&bytes).unwrap();
         assert_eq!(p.format, PaFormat::Dxt1);
         assert_eq!(p.mips.len(), 3); // 16, 8, 4
+        assert!(p.mips.iter().all(|m| !m.lzo));
         let dec = decompress(BcFormat::Bc1, &p.mips[0].data, 16, 16);
         assert_eq!(dec.len(), 16 * 16 * 4);
     }
@@ -134,6 +152,7 @@ mod tests {
             EncodeOptions {
                 format: PaFormat::Auto,
                 generate_mips: false,
+                compress: false,
             },
         )
         .unwrap();
@@ -169,9 +188,53 @@ mod tests {
             EncodeOptions {
                 format: PaFormat::Dxt1,
                 generate_mips: false,
+                compress: false,
             },
         )
         .unwrap_err();
         assert_eq!(err, EncodeError::SoftAlphaForcedDxt1);
+    }
+
+    #[test]
+    fn compress_saves_on_large_uniform_and_roundtrips() {
+        let img = RgbaImage::from_pixel(64, 64, Rgba([10, 20, 30, 255]));
+        let raw_opts = EncodeOptions {
+            format: PaFormat::Dxt1,
+            generate_mips: false,
+            compress: false,
+        };
+        let lzo_opts = EncodeOptions {
+            compress: true,
+            ..raw_opts
+        };
+        let raw_paa = encode_rgba8(&img, raw_opts).unwrap();
+        let lzo_paa = encode_rgba8(&img, lzo_opts).unwrap();
+        assert!(lzo_paa.len() < raw_paa.len());
+
+        let p = parse_paa(&lzo_paa).unwrap();
+        assert!(p.mips[0].lzo);
+        let expected = bcn_raw_size(PaFormat::Dxt1, 64, 64);
+        let bcn = decompress_exact(&p.mips[0].data, expected).unwrap();
+        let raw_p = parse_paa(&raw_paa).unwrap();
+        assert_eq!(bcn, raw_p.mips[0].data);
+        assert_eq!(bcn.len(), expected);
+    }
+
+    #[test]
+    fn compress_keeps_tiny_mip_raw_when_no_win() {
+        let img = RgbaImage::from_pixel(4, 4, Rgba([1, 2, 3, 255]));
+        let bytes = encode_rgba8(
+            &img,
+            EncodeOptions {
+                format: PaFormat::Dxt1,
+                generate_mips: false,
+                compress: true,
+            },
+        )
+        .unwrap();
+        let p = parse_paa(&bytes).unwrap();
+        // 8-byte BC1 almost never shrinks under LZO.
+        assert!(!p.mips[0].lzo);
+        assert_eq!(p.mips[0].data.len(), 8);
     }
 }
