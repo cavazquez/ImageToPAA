@@ -1,6 +1,6 @@
 name: imagetopaa
 base: core24
-version: "0.1.0"
+version: "1.0.0"
 summary: Convert PNG/TGA images to Arma 3 PAA textures
 description: |
   Open-source CLI that converts PNG/TGA images to Bohemia Interactive
