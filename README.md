@@ -65,7 +65,7 @@ No se descarga ni se exige en CI pública.
 Cuando el nombre `imagetopaa` esté registrado en el Snap Store:
 
 ```bash
-sudo snap install imagetopaa --edge   # o --stable tras la primera release
+sudo snap install imagetopaa
 imagetopaa input.png output.paa
 ```
 

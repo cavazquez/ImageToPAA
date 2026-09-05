@@ -22,8 +22,7 @@ issues: https://github.com/cavazquez/ImageToPAA/issues
 contact: https://github.com/cavazquez/ImageToPAA/issues
 license: Apache-2.0
 
-# Switch to `stable` after the first store review passes.
-grade: devel
+grade: stable
 confinement: strict
 
 platforms:
